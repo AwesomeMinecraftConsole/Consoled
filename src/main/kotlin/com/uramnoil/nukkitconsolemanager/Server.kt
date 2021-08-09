@@ -6,7 +6,12 @@ import kotlin.coroutines.CoroutineContext
 
 class Server(private val builder: ProcessBuilder, private val onReceiveLine: suspend (line: String) -> Unit = {}) : CoroutineScope, Closeable {
     private val job = SupervisorJob()
-    private var joinableChildren = listOf<Job>()
+
+    private var _joinableChildren = listOf<Job>()
+
+    val joinableChild: List<Job>
+        get() = _joinableChildren
+
     override val coroutineContext: CoroutineContext
         get() = job + CoroutineExceptionHandler { coroutineContext, throwable ->
             throwable.printStackTrace()
@@ -23,14 +28,13 @@ class Server(private val builder: ProcessBuilder, private val onReceiveLine: sus
 
     fun start() {
         process = builder.start()
-        joinableChildren = listOf(startReceiveEachLines(console), waitForProcess())
+        _joinableChildren = listOf(startReceiveEachLines(console), waitForProcess())
         startRedirectConsoleInput()
     }
 
     private fun startReceiveEachLines(console: Console) = launch {
         while (true) {
             val message = console.readLine() ?: break
-
             onReceiveLine(message)
         }
     }
@@ -74,6 +78,6 @@ class Server(private val builder: ProcessBuilder, private val onReceiveLine: sus
     }
 
     suspend fun join() {
-        joinableChildren.joinAll()
+        _joinableChildren.joinAll()
     }
 }
