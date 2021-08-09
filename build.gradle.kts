@@ -15,9 +15,13 @@ application {
     mainClass.set("com/uramnoil/nukkitconsolemanager.MainKt")
 }
 
+tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+}
+
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
 }
-
-projectDir.absolutePath

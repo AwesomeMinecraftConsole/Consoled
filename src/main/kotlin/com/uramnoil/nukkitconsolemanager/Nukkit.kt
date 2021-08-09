@@ -1,6 +1,7 @@
 package com.uramnoil.nukkitconsolemanager
 
 import kotlinx.coroutines.*
+import java.io.BufferedReader
 import kotlin.coroutines.CoroutineContext
 
 class Nukkit(private val builder: ProcessBuilder, private val onReceiveLine: (line: String) -> Unit = {}) : CoroutineScope {
@@ -24,19 +25,13 @@ class Nukkit(private val builder: ProcessBuilder, private val onReceiveLine: (li
     }
 
     private fun startReceiveEachLines(console: Console) = launch {
-        withContext(Dispatchers.IO) {
+        withContext(Dispatchers.Default) { // NOTE ただの待機なのでIOではない
             while (true) {
-                val message = console.readLine()
-
-                if (message == null) {
-                    close()
-                    break
-                }
+                val message = console.readLine() ?: break
 
                 onReceiveLine(message)
             }
         }
-        println("hoge")
     }
 
     suspend fun shutdown() {
@@ -45,17 +40,20 @@ class Nukkit(private val builder: ProcessBuilder, private val onReceiveLine: (li
 
     fun waitForProcess() = launch {
         withContext(Dispatchers.Default) {
-            val hoge = process.waitFor()
-            println(hoge)
+            process.waitFor()
         }
     }
 
-    private fun close() {
+    private fun stop() {
         job.cancel()
+    }
+
+    fun close() {
         console.close()
     }
 
-    suspend fun join() {
+    suspend fun joinWithClose() {
         childJobs.joinAll()
+        close()
     }
 }

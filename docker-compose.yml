@@ -1,0 +1,9 @@
+version: "3.8"
+
+services:
+  java:
+    image: java
+    volumes:
+      - ./nukkit:/nukkit
+    working_dir: /nukkit
+    command: "java -jar NukkitConsoleManager-1.0-SNAPSHOT-all.jar"
