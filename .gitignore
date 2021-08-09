@@ -1,0 +1,4 @@
+nukkit
+# プロジェクトの除外パス
+/.gradle/
+/build/
