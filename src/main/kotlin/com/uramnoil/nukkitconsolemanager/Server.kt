@@ -29,23 +29,12 @@ class Server(private val builder: ProcessBuilder, private val onReceiveLine: sus
     fun start() {
         process = builder.start()
         _joinableChildren = listOf(startReceiveEachLines(console), waitForProcess())
-        startRedirectConsoleInput()
     }
 
     private fun startReceiveEachLines(console: Console) = launch {
         while (true) {
             val message = console.readLine() ?: break
             onReceiveLine(message)
-        }
-    }
-
-    private fun startRedirectConsoleInput() = launch {
-        val inputBufferedReader = System.`in`.bufferedReader()
-        while (true) {
-            val message = withContext(Dispatchers.IO) {
-                inputBufferedReader.readLine()
-            } ?: continue
-            writeLine(message)
         }
     }
 

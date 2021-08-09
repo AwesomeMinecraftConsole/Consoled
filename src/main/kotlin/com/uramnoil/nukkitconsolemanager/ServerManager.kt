@@ -1,12 +1,9 @@
 package com.uramnoil.nukkitconsolemanager
 
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Job
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
+import kotlinx.coroutines.*
 import kotlin.coroutines.CoroutineContext
 
-class ServerManager : CoroutineScope {
+class ServerManager() : CoroutineScope {
     val canLoop = true
 
     private val job = Job()
@@ -44,5 +41,15 @@ class ServerManager : CoroutineScope {
 
     suspend fun join() {
         job.join()
+    }
+
+    fun startRedirectConsoleInput() = launch {
+        val inputBufferedReader = System.`in`.bufferedReader()
+        while (true) {
+            val message = withContext(Dispatchers.IO) {
+                inputBufferedReader.readLine()
+            } ?: continue
+            server?.writeLine(message)
+        }
     }
 }
