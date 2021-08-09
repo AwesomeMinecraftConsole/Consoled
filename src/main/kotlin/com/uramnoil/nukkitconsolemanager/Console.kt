@@ -4,18 +4,20 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.BufferedReader
 import java.io.BufferedWriter
+import java.io.Closeable
 
-class Console(private val bufferedReader: BufferedReader, private val bufferedWriter: BufferedWriter) {
+class Console(private val bufferedReader: BufferedReader, private val bufferedWriter: BufferedWriter) : Closeable {
     suspend fun readLine(): String? = withContext(Dispatchers.IO) {
         bufferedReader.readLine()
     }
 
-    suspend fun writeLine(line: String) = withContext(Dispatchers.IO) {
+    fun writeLine(line: String) {
         bufferedWriter.write(line)
+        bufferedWriter.appendLine()
         bufferedWriter.flush()
     }
 
-    fun close() {
+    override fun close() {
         bufferedReader.close()
         bufferedWriter.close()
     }

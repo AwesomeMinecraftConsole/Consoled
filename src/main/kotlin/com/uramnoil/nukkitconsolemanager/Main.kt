@@ -1,15 +1,18 @@
 package com.uramnoil.nukkitconsolemanager
 
 import kotlinx.coroutines.coroutineScope
-import java.io.File
 
 suspend fun main(): Unit = coroutineScope {
     val processBuilder = ProcessBuilder().apply {
         command("sh", "start.sh")
-        inheritIO()
+        redirectErrorStream(true)
+        redirectOutput(ProcessBuilder.Redirect.INHERIT)
     }
-    val server = Nukkit(processBuilder) {
+
+    val server = Server(processBuilder) {
+
+    }.use {
+        it.start()
+        it.join()
     }
-    server.start()
-    server.joinWithClose()
 }
