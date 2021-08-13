@@ -42,24 +42,29 @@ tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
     }
 }
 
+val protobufVersion = "3.17.3"
+val grpcVersion = "1.39.0"
+val grpcKotlinVersion = "1.1.0"
+
 dependencies {
     implementation(kotlin("stdlib"))
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.5.1")
-    implementation("com.google.protobuf:protobuf-java-util:3.17.3")
-    implementation("io.grpc:grpc-protobuf:1.39.0")
-    implementation("io.grpc:grpc-kotlin-stub:1.1.0")
+    implementation("com.google.protobuf:protobuf-java-util:$protobufVersion")
+    implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
+    implementation("io.grpc:grpc-protobuf:$grpcVersion")
+    implementation("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
 }
 
 protobuf {
     protoc {
-        artifact = "com.google.protobuf:protoc:3.17.3"
+        artifact = "com.google.protobuf:protoc:$protobufVersion"
     }
     plugins {
         id("grpc") {
-            artifact = "io.grpc:protoc-gen-grpc-java:1.39.0${if (osdetector.os == "osx") ":osx-x86_64" else ""}"
+            artifact = "io.grpc:protoc-gen-grpc-java:$grpcVersion${if (osdetector.os == "osx") ":osx-x86_64" else ""}"
         }
         id("grpckt") {
-            artifact = "io.grpc:protoc-gen-grpc-kotlin:1.1.0:jdk7@jar"
+            artifact = "io.grpc:protoc-gen-grpc-kotlin:$grpcKotlinVersion:jdk7@jar"
         }
     }
     generateProtoTasks {
