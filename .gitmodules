@@ -1,0 +1,6 @@
+[submodule "proto"]
+	path = proto
+	url = https://github.com/AwesomeMinecraftConsole/protocols
+[submodule "src/main/proto"]
+	path = src/main/proto
+	url = https://github.com/AwesomeMinecraftConsole/protocols

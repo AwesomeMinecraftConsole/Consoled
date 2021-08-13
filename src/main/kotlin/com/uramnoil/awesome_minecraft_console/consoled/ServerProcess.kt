@@ -1,21 +1,22 @@
-package com.uramnoil.nukkitconsolemanager
+package com.uramnoil.awesome_minecraft_console.consoled
 
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collect
 import java.io.Closeable
 import kotlin.coroutines.CoroutineContext
 
-class Server(private val builder: ProcessBuilder, private val onReceiveLine: suspend (line: String) -> Unit = {}) : CoroutineScope, Closeable {
+class ServerProcess(
+    private val builder: ProcessBuilder,
+    private val mutableLineSharedFlow: MutableSharedFlow<String> = MutableSharedFlow(),
+    private val commandFlow: Flow<String>,
+) : CoroutineScope, Closeable {
     private val job = SupervisorJob()
-
-    private var _joinableChildren = listOf<Job>()
-
-    val joinableChild: List<Job>
-        get() = _joinableChildren
 
     override val coroutineContext: CoroutineContext
         get() = job + CoroutineExceptionHandler { coroutineContext, throwable ->
             throwable.printStackTrace()
-            close()
         }
 
     lateinit var process: Process
@@ -28,13 +29,18 @@ class Server(private val builder: ProcessBuilder, private val onReceiveLine: sus
 
     fun start() {
         process = builder.start()
-        _joinableChildren = listOf(startReceiveEachLines(console), waitForProcess())
+        launch {
+            commandFlow.collect {
+                writeLine(it)
+            }
+        }
+        startReceiveEachLines(console)
     }
 
     private fun startReceiveEachLines(console: Console) = launch {
         while (true) {
             val message = console.readLine() ?: break
-            onReceiveLine(message)
+            mutableLineSharedFlow.emit(message)
         }
     }
 
@@ -42,14 +48,8 @@ class Server(private val builder: ProcessBuilder, private val onReceiveLine: sus
         console.writeLine(line)
     }
 
-    fun shutdown() {
-        writeLine("stop")
-    }
-
-    fun waitForProcess() = launch {
-        withContext(Dispatchers.Default) {
-            process.waitFor()
-        }
+    private suspend fun Process.await() = withContext(Dispatchers.Default) {
+        waitFor()
     }
 
     private fun stop() {
@@ -58,6 +58,7 @@ class Server(private val builder: ProcessBuilder, private val onReceiveLine: sus
 
     override fun close() {
         console.close()
+        job.complete()
         process.apply {
             inputStream.close()
             outputStream.close()
@@ -66,7 +67,8 @@ class Server(private val builder: ProcessBuilder, private val onReceiveLine: sus
         process.destroy()
     }
 
-    suspend fun join() {
-        _joinableChildren.joinAll()
+    suspend fun await() {
+        process.await()
+        job.join()
     }
 }

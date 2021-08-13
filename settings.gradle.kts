@@ -1,3 +1,1 @@
-
-rootProject.name = "NukkitConsoleManager"
-
+rootProject.name = "Consoled"

@@ -1,4 +1,4 @@
-package com.uramnoil.nukkitconsolemanager
+package com.uramnoil.awesome_minecraft_console.consoled
 
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
