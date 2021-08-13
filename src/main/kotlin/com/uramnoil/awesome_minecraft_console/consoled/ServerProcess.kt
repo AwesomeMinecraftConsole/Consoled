@@ -48,10 +48,6 @@ class ServerProcess(
         console.writeLine(line)
     }
 
-    private suspend fun Process.await() = withContext(Dispatchers.Default) {
-        waitFor()
-    }
-
     private fun stop() {
         job.cancel()
     }
@@ -72,3 +68,5 @@ class ServerProcess(
         job.join()
     }
 }
+
+suspend fun Process.await() = withContext(Dispatchers.Default) { waitFor() }
