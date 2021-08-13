@@ -15,7 +15,7 @@ class ServerProcess(
     private val job = SupervisorJob()
 
     override val coroutineContext: CoroutineContext
-        get() = job + CoroutineExceptionHandler { coroutineContext, throwable ->
+        get() = job + CoroutineExceptionHandler { _, throwable ->
             throwable.printStackTrace()
         }
 
