@@ -65,7 +65,7 @@ class ServerProcess(
 
     suspend fun await() {
         process.await()
-        job.join()
+        stop()
     }
 }
 

@@ -3,6 +3,7 @@ package com.uramnoil.awesome_minecraft_console.consoled
 import com.uramnoil.awesome_minecraft_console.protocols.ConsoleGrpcKt
 import com.uramnoil.awesome_minecraft_console.protocols.ConsoleOuterClass
 import io.grpc.ManagedChannel
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.Flow
@@ -22,7 +23,9 @@ class OctopassClientImpl(
 ) : Closeable, CoroutineScope {
     private val job = Job()
     override val coroutineContext: CoroutineContext
-        get() = job
+        get() = job + CoroutineExceptionHandler { coroutineContext, throwable ->
+            job.complete()
+        }
 
     private val stub = ConsoleGrpcKt.ConsoleCoroutineStub(channel)
 
@@ -30,19 +33,20 @@ class OctopassClientImpl(
         job.complete()
     }
 
-    private suspend fun connectConsole() {
+    suspend fun connectConsole() {
         stub.console(lineFlow.map { ConsoleOuterClass.LineRequest.newBuilder().setLine(it).build() }).collect {
             mutableCommandFlow.emit(it.command)
         }
     }
 
-    private suspend fun connectManagement() {
+    suspend fun connectManagement() {
         stub.management(notificationFlow.map {
             ConsoleOuterClass.NotificationRequest.newBuilder().setMessage(it).build()
         }).collect {
             when (it.typeCase.number) {
                 1 -> mutableOperationSharedFlow.emit(Operation.START)
-                else -> {}
+                else -> {
+                }
             }
         }
     }

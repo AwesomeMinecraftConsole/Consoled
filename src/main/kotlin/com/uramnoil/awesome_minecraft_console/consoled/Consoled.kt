@@ -1,20 +1,27 @@
 package com.uramnoil.awesome_minecraft_console.consoled
 
-import io.grpc.ManagedChannel
+import io.grpc.ManagedChannelBuilder
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
 import java.io.Closeable
+import kotlin.coroutines.CoroutineContext
 
-class Consoled(channel: ManagedChannel) : Closeable {
-    val mutableSharedCommandFlow = MutableSharedFlow<String>()
-    val mutableSharedLineFlow = MutableSharedFlow<String>()
-    val mutableOperationFlow = MutableSharedFlow<Operation>()
-    val mutableNotificationFlow = MutableSharedFlow<String>()
+class Consoled : Closeable, CoroutineScope {
+    private val job = Job()
+    override val coroutineContext: CoroutineContext
+        get() = job + serverProcessManager.coroutineContext
+
+    private val mutableSharedCommandFlow = MutableSharedFlow<String>()
+    private val mutableSharedLineFlow = MutableSharedFlow<String>()
+    private val mutableOperationFlow = MutableSharedFlow<Operation>()
+    private val mutableNotificationFlow = MutableSharedFlow<String>()
 
     private val serverProcessManager: ServerProcessManager =
         ServerProcessManager(mutableSharedLineFlow, mutableSharedCommandFlow)
 
     private val octopassClient = OctopassClientImpl(
-        channel,
+        ManagedChannelBuilder.forAddress("localhost", 50051).build(),
         mutableSharedLineFlow,
         mutableSharedCommandFlow,
         mutableNotificationFlow,

@@ -34,10 +34,11 @@ class ServerProcessManager(
     }
 
     fun start() = launch {
+        startRedirectConsoleInput()
         do {
             runServer().join()
-            delay(3000)
         } while (shouldLoop)
+        job.cancel()
     }
 
     suspend fun await() {
@@ -47,10 +48,32 @@ class ServerProcessManager(
     fun startRedirectConsoleInput() = launch {
         val inputBufferedReader = System.`in`.bufferedReader()
         while (true) {
-            val message = withContext(Dispatchers.IO) {
+            val command = withContext(Dispatchers.IO) {
                 inputBufferedReader.readLine()
             } ?: continue
-            _process?.writeLine(message)
+
+            if (command.isAwesomeCommand()) {
+                executeAwesomeCommand(*command.split(' ').drop(1).toTypedArray())
+            } else {
+                _process?.writeLine(command)
+            }
+        }
+    }
+
+    private fun executeAwesomeCommand(vararg args: String) {
+        when (args.getOrNull(0)) {
+            null -> {
+
+            }
+            "loopoff" -> {
+                shouldLoop = false
+                println("Server Loop: off")
+            }
+            "loopon" -> {
+                shouldLoop = true
+                println("Server Loop: on")
+            }
+            "forceshutdown" -> close()
         }
     }
 
@@ -59,3 +82,5 @@ class ServerProcessManager(
         job.complete()
     }
 }
+
+fun String.isAwesomeCommand() = startsWith("awesome")

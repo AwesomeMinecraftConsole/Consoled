@@ -53,6 +53,9 @@ dependencies {
     implementation("io.grpc:grpc-netty-shaded:$grpcVersion")
     implementation("io.grpc:grpc-protobuf:$grpcVersion")
     implementation("io.grpc:grpc-kotlin-stub:$grpcKotlinVersion")
+
+    testImplementation(kotlin("test"))
+    testImplementation("junit:junit:4.12")
 }
 
 protobuf {
@@ -75,4 +78,8 @@ protobuf {
             }
         }
     }
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
