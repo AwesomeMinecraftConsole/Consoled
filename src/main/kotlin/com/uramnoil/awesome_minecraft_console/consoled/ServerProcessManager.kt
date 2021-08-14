@@ -23,14 +23,14 @@ class ServerProcessManager(
         redirectOutput(ProcessBuilder.Redirect.INHERIT)
     }
 
-    var _process: ServerProcess? = null
+    private var process: ServerProcess? = null
 
     private fun runServer() = launch {
-        assert(_process == null)
-        _process = ServerProcess(processBuilder, mutableLineSharedFlow, commandFlow)
-        _process!!.start()
-        _process!!.await()
-        _process = null
+        assert(process == null)
+        process = ServerProcess(processBuilder, mutableLineSharedFlow, commandFlow)
+        process!!.start()
+        process!!.await()
+        process = null
     }
 
     fun start() = launch {
@@ -55,7 +55,7 @@ class ServerProcessManager(
             if (command.isAwesomeCommand()) {
                 executeAwesomeCommand(command.split(' ').drop(1))
             } else {
-                _process?.writeLine(command)
+                process?.writeLine(command)
             }
         }
     }
@@ -78,7 +78,7 @@ class ServerProcessManager(
     }
 
     override fun close() {
-        _process?.close()
+        process?.close()
         job.complete()
     }
 }
