@@ -53,14 +53,14 @@ class ServerProcessManager(
             } ?: continue
 
             if (command.isAwesomeCommand()) {
-                executeAwesomeCommand(*command.split(' ').drop(1).toTypedArray())
+                executeAwesomeCommand(command.split(' ').drop(1))
             } else {
                 _process?.writeLine(command)
             }
         }
     }
 
-    private fun executeAwesomeCommand(vararg args: String) {
+    private fun executeAwesomeCommand(args: List<String>) {
         when (args.getOrNull(0)) {
             null -> {
 
