@@ -9,7 +9,7 @@ import kotlin.coroutines.CoroutineContext
 
 class ServerProcess(
     private val builder: ProcessBuilder,
-    private val mutableLineSharedFlow: MutableSharedFlow<String> = MutableSharedFlow(),
+    private val mutableLineSharedFlow: MutableSharedFlow<String>,
     private val commandFlow: Flow<String>,
 ) : CoroutineScope, Closeable {
     private val job = SupervisorJob()

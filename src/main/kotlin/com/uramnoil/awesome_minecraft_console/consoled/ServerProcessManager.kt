@@ -10,7 +10,7 @@ class ServerProcessManager(
     private val mutableLineSharedFlow: MutableSharedFlow<String> = MutableSharedFlow(),
     private val commandFlow: Flow<String>,
 ) : CoroutineScope, Closeable {
-    var shouldLoop = true
+    var shouldLoop = false
 
     private val job = Job()
 
@@ -20,7 +20,6 @@ class ServerProcessManager(
     private val processBuilder = ProcessBuilder().apply {
         command("sh", "start.sh")
         redirectErrorStream(true)
-        redirectOutput(ProcessBuilder.Redirect.INHERIT)
     }
 
     private var process: ServerProcess? = null

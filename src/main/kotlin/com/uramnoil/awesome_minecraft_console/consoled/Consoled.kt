@@ -4,6 +4,8 @@ import io.grpc.ManagedChannelBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 import java.io.Closeable
 import kotlin.coroutines.CoroutineContext
 
@@ -21,7 +23,7 @@ class Consoled : Closeable, CoroutineScope {
         ServerProcessManager(mutableSharedLineFlow, mutableSharedCommandFlow)
 
     private val octopassClient = OctopassClientImpl(
-        ManagedChannelBuilder.forAddress("localhost", 50051).build(),
+        ManagedChannelBuilder.forAddress("127.0.0.1", 50052).usePlaintext().build(),
         mutableSharedLineFlow,
         mutableSharedCommandFlow,
         mutableNotificationFlow,
@@ -31,6 +33,11 @@ class Consoled : Closeable, CoroutineScope {
     fun start() {
         octopassClient.start()
         serverProcessManager.start()
+        launch {
+            mutableSharedLineFlow.collect {
+                println(it)
+            }
+        }
     }
 
     suspend fun await() {

@@ -24,7 +24,7 @@ class OctopassClientImpl(
     private val job = Job()
     override val coroutineContext: CoroutineContext
         get() = job + CoroutineExceptionHandler { coroutineContext, throwable ->
-            job.complete()
+            throwable.printStackTrace()
         }
 
     private val stub = ConsoleGrpcKt.ConsoleCoroutineStub(channel)
