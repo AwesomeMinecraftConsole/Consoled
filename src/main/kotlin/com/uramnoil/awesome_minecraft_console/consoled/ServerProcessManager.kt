@@ -45,7 +45,7 @@ class ServerProcessManager(
         job.join()
     }
 
-    fun startRedirectConsoleInput() = launch {
+    private fun startRedirectConsoleInput() = launch {
         val inputBufferedReader = System.`in`.bufferedReader()
         while (true) {
             val command = withContext(Dispatchers.IO) {
