@@ -9,8 +9,8 @@ import kotlin.coroutines.CoroutineContext
 class ServerProcessManager(
     private val mutableLineSharedFlow: MutableSharedFlow<String> = MutableSharedFlow(),
     private val commandFlow: Flow<String>,
+    var shouldLoop: Boolean = true
 ) : CoroutineScope, Closeable {
-    var shouldLoop = false
 
     private val job = Job()
 
@@ -33,7 +33,6 @@ class ServerProcessManager(
     }
 
     fun start() = launch {
-        startRedirectConsoleInput()
         do {
             runServer().join()
         } while (shouldLoop)
@@ -44,42 +43,8 @@ class ServerProcessManager(
         job.join()
     }
 
-    private fun startRedirectConsoleInput() = launch {
-        val inputBufferedReader = System.`in`.bufferedReader()
-        while (true) {
-            val command = withContext(Dispatchers.IO) {
-                inputBufferedReader.readLine()
-            } ?: continue
-
-            if (command.isAwesomeCommand()) {
-                executeAwesomeCommand(command.split(' ').drop(1))
-            } else {
-                process?.writeLine(command)
-            }
-        }
-    }
-
-    private fun executeAwesomeCommand(args: List<String>) {
-        when (args.getOrNull(0)) {
-            null -> {
-
-            }
-            "loopoff" -> {
-                shouldLoop = false
-                println("Server Loop: off")
-            }
-            "loopon" -> {
-                shouldLoop = true
-                println("Server Loop: on")
-            }
-            "forceshutdown" -> close()
-        }
-    }
-
     override fun close() {
         process?.close()
         job.complete()
     }
 }
-
-fun String.isAwesomeCommand() = startsWith("awesome")

@@ -1,1 +1,1 @@
-rootProject.name = "Consoled"
+rootProject.name = "Weaver"
