@@ -15,24 +15,14 @@ import kotlinx.coroutines.launch
 import java.io.Closeable
 import kotlin.coroutines.CoroutineContext
 
-class OctopassClientImpl(
+class WeaverClient(
     channel: ManagedChannel,
     private val lineFlow: Flow<String>,
     private val mutableCommandFlow: MutableSharedFlow<String> = MutableSharedFlow(),
     private val notificationFlow: Flow<String>,
     private val mutableOperationSharedFlow: MutableSharedFlow<Operation> = MutableSharedFlow()
-) : Closeable, CoroutineScope {
-    private val job = Job()
-    override val coroutineContext: CoroutineContext
-        get() = job + CoroutineExceptionHandler { coroutineContext, throwable ->
-            throwable.printStackTrace()
-        }
-
+) {
     private val stub = WeaverGrpcKt.WeaverCoroutineStub(channel)
-
-    override fun close() {
-        job.complete()
-    }
 
     suspend fun connectConsole() {
         stub.console(lineFlow.map { WeaverOuterClass.Line.newBuilder().setLine(it).build() }).collect {
@@ -49,13 +39,6 @@ class OctopassClientImpl(
                 else -> {
                 }
             }
-        }
-    }
-
-    fun start() {
-        launch {
-            connectConsole()
-            connectManagement()
         }
     }
 }

@@ -8,11 +8,7 @@ import java.io.Closeable
 import java.util.concurrent.TimeUnit
 import kotlin.coroutines.CoroutineContext
 
-class Consoled(host: String, port: Int) : Closeable, CoroutineScope {
-    private val job = Job()
-    override val coroutineContext: CoroutineContext
-        get() = job + serverProcessManager.coroutineContext
-
+class Weaver(host: String, port: Int) : Closeable, CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJob()) {
     private val mutableSharedCommandFlow = MutableSharedFlow<String>()
     private val mutableSharedLineFlow = MutableSharedFlow<String>()
     private val mutableOperationFlow = MutableSharedFlow<Operation>()
@@ -21,7 +17,7 @@ class Consoled(host: String, port: Int) : Closeable, CoroutineScope {
     private val serverProcessManager: ServerProcessManager =
         ServerProcessManager(mutableSharedLineFlow, mutableSharedCommandFlow, shouldLoop = false)
 
-    private val octopassClient = OctopassClientImpl(
+    private val weaverClient = WeaverClient(
         ManagedChannelBuilder
             .forAddress(host, port)
             .usePlaintext()
@@ -35,11 +31,20 @@ class Consoled(host: String, port: Int) : Closeable, CoroutineScope {
     )
 
     fun start() {
-        octopassClient.start()
+        launch(CoroutineExceptionHandler { _, throwable ->
+        }) {
+            weaverClient.connectConsole()
+            weaverClient.connectManagement()
+        }
         serverProcessManager.start()
         launch {
             mutableSharedLineFlow.collect {
                 println(it)
+            }
+            mutableOperationFlow.collect {
+                when (it) {
+                    Operation.START -> serverProcessManager.start()
+                }
             }
         }
         startRedirectConsoleInput()
@@ -51,7 +56,6 @@ class Consoled(host: String, port: Int) : Closeable, CoroutineScope {
 
     override fun close() {
         serverProcessManager.close()
-        octopassClient.close()
     }
 
     private fun startRedirectConsoleInput() = launch {
