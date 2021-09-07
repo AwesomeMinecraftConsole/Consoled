@@ -2,7 +2,7 @@ package com.uramnoil.awesome_minecraft_console.consoled
 
 import kotlin.test.Test
 
-class ConsoledTest {
+class WeaverTest {
     @Test
     fun testOctopassClient() {
     }
