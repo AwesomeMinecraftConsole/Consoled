@@ -6,16 +6,16 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.collect
 import java.io.Closeable
 import java.util.concurrent.TimeUnit
-import kotlin.coroutines.CoroutineContext
 
-class Weaver(host: String, port: Int) : Closeable, CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJob()) {
+class Weaver(private val host: String, private val port: Int) : Closeable,
+    CoroutineScope by CoroutineScope(Dispatchers.Default + SupervisorJob()) {
     private val mutableSharedCommandFlow = MutableSharedFlow<String>()
     private val mutableSharedLineFlow = MutableSharedFlow<String>()
     private val mutableOperationFlow = MutableSharedFlow<Operation>()
     private val mutableNotificationFlow = MutableSharedFlow<String>()
 
     private val serverProcessManager: ServerProcessManager =
-        ServerProcessManager(mutableSharedLineFlow, mutableSharedCommandFlow, shouldLoop = false)
+        ServerProcessManager(mutableSharedLineFlow, mutableSharedCommandFlow, shouldLoop = false, coroutineContext)
 
     private val weaverClient = WeaverClient(
         ManagedChannelBuilder
@@ -30,12 +30,12 @@ class Weaver(host: String, port: Int) : Closeable, CoroutineScope by CoroutineSc
         mutableOperationFlow
     )
 
+    private var _isConnecting = false
+    val isConnecting: Boolean
+        get() = _isConnecting
+
     fun start() {
-        launch(CoroutineExceptionHandler { _, throwable ->
-        }) {
-            weaverClient.connectConsole()
-            weaverClient.connectManagement()
-        }
+        startConnect()
         serverProcessManager.start()
         launch {
             mutableSharedLineFlow.collect {
@@ -56,6 +56,26 @@ class Weaver(host: String, port: Int) : Closeable, CoroutineScope by CoroutineSc
 
     override fun close() {
         serverProcessManager.close()
+    }
+
+    private fun startConnect() {
+        if (isConnecting) {
+            println("[weaver] has already connected")
+            return
+        }
+        println("[weaver] connect to $host:$port")
+        launch(CoroutineExceptionHandler { _, throwable ->
+            if (throwable is io.grpc.StatusException) {
+                println("[weaver] could not connect: ${throwable.status.description}")
+            }
+        }) {
+            _isConnecting = true
+            launch {
+                weaverClient.connectConsole()
+                weaverClient.connectManagement()
+            }.join()
+            _isConnecting = false
+        }
     }
 
     private fun startRedirectConsoleInput() = launch {
@@ -86,9 +106,12 @@ class Weaver(host: String, port: Int) : Closeable, CoroutineScope by CoroutineSc
                 serverProcessManager.shouldLoop = true
                 println("Server Loop: on")
             }
-            "forceshutdown" -> close()
+            "exit" -> close()
             "connect" -> {
-
+                startConnect()
+            }
+            "start" -> {
+                serverProcessManager.start()
             }
         }
     }
