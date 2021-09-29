@@ -67,6 +67,7 @@ class Weaver(private val host: String, private val port: Int) : Closeable,
         launch(CoroutineExceptionHandler { _, throwable ->
             if (throwable is io.grpc.StatusException) {
                 println("[weaver] could not connect: ${throwable.status.description}")
+                _isConnecting = false
             }
         }) {
             _isConnecting = true
