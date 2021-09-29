@@ -21,8 +21,8 @@ class Weaver(private val host: String, private val port: Int) : Closeable,
         ManagedChannelBuilder
             .forAddress(host, port)
             .usePlaintext()
-            .keepAliveTime(1000, TimeUnit.MILLISECONDS)
-            .keepAliveTimeout(5000, TimeUnit.MILLISECONDS)
+            .keepAliveTime(1_000, TimeUnit.MILLISECONDS)
+            .keepAliveTimeout(20_000, TimeUnit.MILLISECONDS)
             .build(),
         mutableSharedLineFlow,
         mutableSharedCommandFlow,
